@@ -1,0 +1,8 @@
+version: '3'
+services: 
+  consumer1:
+    build: .
+    restart: always
+  consumer2:
+    build: .
+    restart: always

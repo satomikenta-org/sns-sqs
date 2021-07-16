@@ -1,0 +1,25 @@
+version: '3'
+services:
+  server1:
+    build: .
+  server2:
+    build: .
+  server3:
+    build: .
+  server4:
+    build: .
+  server5:
+    build: .
+  server6:
+    build: .
+  nginx:
+    build: ./nginx
+    ports: 
+      - 8080:80
+    depends_on:
+      - server1
+      - server2
+      - server3
+      - server4
+      - server5
+      - server6

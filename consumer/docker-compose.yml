@@ -9,3 +9,9 @@ services:
   consumer3:
     build: .
     restart: always
+  consumer4:
+    build: .
+    restart: always
+  consumer5:
+    build: .
+    restart: always

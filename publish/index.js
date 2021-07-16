@@ -13,7 +13,7 @@ AWS.config.update({
 const app = express();
 
 app.get('/sns', async (req, res) => {
-  const result = await publishToSNS();
+  const result = await publishToNonFIFOSNS();
   if (!result) res.sendStatus(500);
   res.json({ message: 'success', eventId: result });
 });
@@ -33,6 +33,20 @@ async function publishToSNS() {
   const params = {
     MessageGroupId: ULID.ulid(), // 同一MessageGroupIdではなくなるので MessageのConcurrent Consume可能 // 同一MessageGroup内ではConsumerの数に依存せず、必ずSerializeに処理される。
     MessageDeduplicationId: ULID.ulid(),
+    Message: JSON.stringify({ event: "OrderCreated", eventId, ticketId: 1, userId: 1, ts: Math.round((new Date()).getTime() / 1000)}),
+    TopicArn: process.env.TOPIC_ARN
+  };
+  try {
+    await new AWS.SNS({apiVersion: '2010-03-31'}).publish(params).promise();
+    return eventId;
+  } catch (ex) {
+    console.log(" publish failed: ", ex.message);
+  }
+};
+
+async function publishToNonFIFOSNS() {
+  const eventId = ULID.ulid();
+  const params = { 
     Message: JSON.stringify({ event: "OrderCreated", eventId, ticketId: 1, userId: 1, ts: Math.round((new Date()).getTime() / 1000)}),
     TopicArn: process.env.TOPIC_ARN
   };

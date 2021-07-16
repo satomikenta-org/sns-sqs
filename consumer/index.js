@@ -6,11 +6,12 @@ const { Pool } = require('pg');
 const pool = new Pool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
+  // password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  max: 10,
+  max: 5,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 5000,
+  port: process.env.DB_PORT
 });
 
 AWS.config.update({
@@ -62,20 +63,21 @@ AWS.config.update({
 const app = Consumer.create({
   queueUrl: process.env.QUEUE_URL,
   handleMessage: async (message) => {
-    const { eventId, ticketId, userId, ts } = JSON.parse(message.Body);
+    const { eventId, ticketId, userId, ts } = JSON.parse(JSON.parse(message.Body).Message);
     const connection = await pool.connect();
     try {
       await connection.query("BEGIN");
       
       const result = await connection.query("SELECT balance FROM users WHERE id = $1 FOR UPDATE", [userId]);
+
       console.log(" ============ current balance =========", result.rows[0].balance, new Date());
 
       // wait 1 second to simulate concurrent access.
-      for (let i = 0; i < 350000; i++) {
-        for (let j = 0; j < 10000; j++) {}
-      }
+      // for (let i = 0; i < 350000; i++) {
+      //   for (let j = 0; j < 10000; j++) {}
+      // }
 
-      const newBalance = result.rows[0].balance + 1;
+      const newBalance = Number(result.rows[0].balance) + 1;
       await connection.query("UPDATE users SET balance = $1 WHERE id = $2", [newBalance, userId]);
       await connection.query("INSERT INTO processed_evts (evt_id, ts, result) VALUES($1, $2, $3)", 
         [eventId, ts, 'SUCCESS']
@@ -83,6 +85,7 @@ const app = Consumer.create({
       
       await connection.query("COMMIT");
     } catch (ex) {
+      console.log(ex.message);
       await connection.query("ROLLBACK");
       if (ex.message.match(/processed_evts_pkey/)) return;
       throw new Error("Unexpected Error", ex.message);

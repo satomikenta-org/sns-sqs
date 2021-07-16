@@ -31,7 +31,7 @@ app.listen(3000, () => console.log("start server 3000"));
 async function publishToSNS() {
   const eventId = ULID.ulid();
   const params = {
-    MessageGroupId: "OrderCreated",
+    MessageGroupId: ULID.ulid(), // 同一MessageGroupIdではなくなるので MessageのConcurrent Consume可能 // 同一MessageGroup内ではConsumerの数に依存せず、必ずSerializeに処理される。
     MessageDeduplicationId: ULID.ulid(),
     Message: JSON.stringify({ event: "OrderCreated", eventId, ticketId: 1, userId: 1, ts: Math.round((new Date()).getTime() / 1000)}),
     TopicArn: process.env.TOPIC_ARN

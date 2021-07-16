@@ -6,3 +6,6 @@ services:
   consumer2:
     build: .
     restart: always
+  consumer3:
+    build: .
+    restart: always

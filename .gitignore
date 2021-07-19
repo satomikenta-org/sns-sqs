@@ -1,2 +1,3 @@
 ./consumer/node_modules
 ./publish/node_modules
+.faunarc

@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const ULID = require('ulid');
+const AWSXRay = require('aws-xray-sdk');
 const AWS = require('aws-sdk');
 AWS.config.update({
   region: 'ap-northeast-1',
@@ -11,6 +12,8 @@ AWS.config.update({
 
 
 const app = express();
+
+// app.use(AWSXRay.express.openSegment('PublisherAPI'));
 
 app.get('/sns', async (req, res) => {
   const result = await publishToNonFIFOSNS();
@@ -23,6 +26,8 @@ app.get('/sns', async (req, res) => {
 //   console.log(resp);
 //   res.send('OK');  
 // })
+
+// app.use(AWSXRay.express.closeSegment());
 
 app.listen(3000, () => console.log("start server 3000"));
 
